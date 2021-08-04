@@ -16,16 +16,21 @@ export class HomeComponent implements OnInit {
   asuntDef: Boolean;
   openRespAdmin: Boolean;
   opensolList: Boolean;
+  createReclamos: Boolean;
+  createAsu: Boolean;
   messageFromHTTP;
   resultStatus;
   identificacion;
   myForm: FormGroup;
+  myFormAsu: FormGroup;
+  myFormReclamo: FormGroup;
   resultCom: Boolean;
   Asunto;
   respSol;
   listAsuntos;
   listSolicitudes;
   date;
+  noRadicadoassoc;
   constructor(private http: HttpClient, public datepipe: DatePipe, private formBuilder: FormBuilder, private router: Router) { }
 
   buildForm() {
@@ -33,8 +38,15 @@ export class HomeComponent implements OnInit {
       tipo_solicitud: [null, [Validators.required]],
       text: [null, [Validators.required]]
     });
+    this.myFormAsu = this.formBuilder.group({
+      asunto: [null, [Validators.required]]
+    });
   }
 
+  get asunto() { return this.myFormAsu.get('asunto'); }
+  getErrorAsunto() {
+    return this.asunto.hasError('required') ? 'Este campo es requerido' : '';
+  }
   get Text() { return this.myForm.get('text'); }
   getErrorText() {
     return this.Text.hasError('required') ? 'Este campo es requerido' : '';
@@ -46,7 +58,9 @@ export class HomeComponent implements OnInit {
     this.registrarSol= false;
     this.resultCom = false;
     this.asuntDef = false;
+    this.createReclamos = false;
     this.opensolList = false;
+    this.createAsu =false;
     this.initData();
   }
   confirmSolList(): void{
@@ -69,30 +83,79 @@ export class HomeComponent implements OnInit {
     this.registrarSol= false;
     this.resultCom = false;
   }
+  createAsunto(){
+    this.asuntDef = false;
+    this.registrarSol= false;
+    this.resultCom = false;
+    this.createAsu = true;
+  }
+  onSubmitReclamo(event){
+    event.preventDefault();
+    if (this.myForm.valid) {
+      this.sendData(true);
+    }
+  }
   onSubmit(event) {
     event.preventDefault();
     if (this.myForm.valid) {
-      this.sendData();
+      this.sendData(false);
     }
   }
-  registryValidation(calf){
-    calf = "NO_SATIFACCION";
-    if(calf){
-      calf = "SATIFACCION";
+  cancelAsun(){
+    this.createAsu = false;
+  }
+  onSubmitAsun(event){
+    event.preventDefault();
+    if (this.myFormAsu.valid) {
+      let obj = {
+        identificacion : this.identificacion,
+        asunto: this.myFormAsu.value.asunto
+      }
+      this.http.post('http://'+GlobalConstants.backend_server_address+'/Ticket/',obj, {
+        headers: new HttpHeaders({
+          'Access-Control-Allow-Origin': '*',
+          'Content-Type': 'application/json',
+        }),
+        responseType: 'text' as 'json'
+      }).subscribe(response => {
+       
+        this.initData();
+        this.cancelAsun();
+      }, err => { 
+        console.log(err);
+      });
     }
-    this.respSol.satifaccion = calf;
-    this.http.put('http://'+GlobalConstants.backend_server_address+'/Admin/', this.respSol, {
+  }
+  closeCreateReclamos(){
+    this.opensolList = true;
+    this.createReclamos = false;
+    this.fechdataList();
+  }
+  createReclamo(elementId){
+    this.createReclamos = true;
+    this.date = this.datepipe.transform(Date.now(), 'yyyy-MM-dd hh:mm:ss');
+    this.opensolList = false;
+    this.noRadicadoassoc = elementId;
+  }
+  registryValidation(calf){
+    let variable  = "NO_SATIFACCION";
+    if(calf){
+      variable = "SATIFACCION";
+    }
+    this.respSol.satifaccion = variable;
+    this.http.post('http://'+GlobalConstants.backend_server_address+'/Admin/Update', this.respSol, {
       headers: new HttpHeaders({
+        'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
       }),
       responseType: 'text' as 'json'
     }).subscribe(response => {
       this.messageFromHTTP = JSON.parse(response.toString());
       console.log(this.messageFromHTTP);
-      this.resultCom = true;
-      this.openRespAdmin = false;
-      this.messageFromHTTP = this.respSol.id_response_admin;
-      this.resultStatus = "EXITOSO";
+        this.resultCom = true;
+        this.openRespAdmin = false;
+        this.messageFromHTTP = this.respSol.idresponseadmin;
+        this.resultStatus = "EXITOSO";
     }, err => {
       this.resultCom = true;
       this.openRespAdmin = false;
@@ -110,22 +173,34 @@ export class HomeComponent implements OnInit {
       alert("No tiene respuesta administrativa");
     }
   }
-  sendData(): void{
+  sendData(value): void{
     let obj =  this.myForm.value;
     obj.date = this.date
     obj.ticketId = this.Asunto.ticket
+    if(value){
+      obj.no_radicado_assoc = this.noRadicadoassoc;
+    }
     this.http.post('http://'+GlobalConstants.backend_server_address+'/Solicitudes/', obj, {
       headers: new HttpHeaders({
-        "Access-Control-Allow-Origin": "*",
+        'Access-Control-Allow-Origin': '*',
         'Content-Type': 'application/json',
       }),
       responseType: 'text' as 'json'
     }).subscribe(response => {
       this.messageFromHTTP = JSON.parse(response.toString());
       console.log(this.messageFromHTTP);
-      this.registrarSol= false;
-      this.resultCom = true;
-      this.resultStatus = "EXITOSO";
+      if(this.messageFromHTTP.no_radicado != null){
+        this.registrarSol= false;
+        this.resultCom = true;
+        this.createReclamos = false;
+        this.resultStatus = "EXITOSO";
+        this.myForm.reset();
+      }else{
+        if(value){
+          alert("Por favor si no existe respuesta de la Administracion, Espere 5 dias para poder enviar su Reclamo")
+        }
+      }
+      
     }, err => {
       this.resultCom = true;
       this.resultStatus = "FALLIDO";

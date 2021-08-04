@@ -1,23 +1,23 @@
-<div *ngIf= "!registrarSol && asuntDef && !resultCom && !opensolList && !openRespAdmin" class="main-div">
+<div *ngIf= "!registrarSol && asuntDef && !resultCom && !opensolList && !openRespAdmin && !createReclamos" class="main-div">
     <mat-card>
         <mat-card-header>
         </mat-card-header>
         <mat-card-content>
-            <button mat-stroked-button class="btn-block" (click)="confirmSol()">Registrar Solicitud</button>
+            <button mat-raised-button color="primary" class="btn-block" (click)="confirmSol()">Registrar Solicitud</button>
         </mat-card-content>
     </mat-card>
     <mat-card>
         <mat-card-header>
         </mat-card-header>
         <mat-card-content>
-            <button mat-stroked-button class="btn-block" (click)="confirmSolList()">Ver Solicitudes</button>
+            <button mat-raised-button color="primary" class="btn-block" (click)="confirmSolList()">Ver Solicitudes</button>
         </mat-card-content>
     </mat-card>
     <mat-card>
       <mat-card-header>
       </mat-card-header>
       <mat-card-content>
-          <button mat-stroked-button class="btn-block" (click)="volverList()">Volver</button>
+          <button mat-raised-button color="primary" class="btn-block" (click)="volverList()">Volver</button>
       </mat-card-content>
     </mat-card>
 </div>
@@ -31,7 +31,7 @@
       </mat-card-header>
       <mat-card-content >
         <span class="example-spacer"></span>
-        <button mat-raised-button (click)="volverList()">Volver</button>
+        <button mat-raised-button color="primary" (click)="volverList()">Volver</button>
       </mat-card-content>
   </mat-card>
 </div>
@@ -39,7 +39,7 @@
 <div *ngIf= "openRespAdmin" >
   <mat-card>
       <mat-card-header>
-          <button  mat-button style="font-size: 15px;">No_Resp_Radicado: {{respSol.id_response_admin}}</button>
+          <button  mat-button style="font-size: 15px;">No_Resp_Radicado: {{respSol.idresponseadmin}}</button>
           <span class="example-spacer"></span>
           <button mat-raised-button color="primary" (click)="confirmSolList()" >Volver</button>
       </mat-card-header>
@@ -48,25 +48,35 @@
           <p>
             <mat-form-field appearance="standard">
               <mat-label>No. Radicado Respuesta:</mat-label>
-              <input matInput disabled> {{ respSol.id_response_admin }}
+              <br>
+              <input matInput disabled> {{ respSol.idresponseadmin }}
+            </mat-form-field>
+          </p>
+          <p>
+            <mat-form-field appearance="standard">
+              <mat-label>No. Radicado:</mat-label>
+              <br>
+              <input matInput disabled> {{ respSol.no_radicado }}
             </mat-form-field>
           </p>
         <p>
           <mat-form-field appearance="standard">
             <mat-label>Descripcion:</mat-label>
+            <br>
             <input matInput disabled> {{ respSol.text }}
           </mat-form-field>
         </p>
         <p>
           <mat-form-field appearance="fill">
             <mat-label>Fecha:</mat-label>
+            <br>
             <input  matInput disabled>{{respSol.date}} 
           </mat-form-field>
         </p>
         <div *ngIf= "respSol.calificacion == 0" >
           <h1>Estas satisfecho con la respuesta ?</h1>
-          <mat-icon  (click)="registryValidation(respSol.id_response_admin, true)">check</mat-icon>
-          <mat-icon  (click)="registryValidation(respSol.id_response_admin, false)">clear</mat-icon>
+          <mat-icon  (click)="registryValidation(true)">check</mat-icon>
+          <mat-icon  (click)="registryValidation(false)">clear</mat-icon>
         </div>
         </div>
       </mat-card-content>
@@ -109,7 +119,7 @@
             <!-- Weight Column -->
             <ng-container matColumnDef="optionregistry">
               <th mat-header-cell *matHeaderCellDef>Reclamo</th>
-              <td mat-cell *matCellDef="let solicitud"><button mat-raised-button color="primary">Registrar</button></td>
+              <td mat-cell *matCellDef="let solicitud"><button mat-raised-button color="primary" (click)="createReclamo(solicitud.no_radicado)">Registrar</button></td>
             </ng-container>
           
             <tr mat-header-row *matHeaderRowDef="displayedColumns"></tr>
@@ -119,22 +129,102 @@
   </mat-card>
 </div>
 
-<div *ngIf= "!asuntDef && !resultCom" >
+<div *ngIf= "createReclamos" >
+  <mat-card>
+      <mat-card-header>
+          <button  mat-button style="font-size: 15px;">Crear Reclamo:</button>
+          <span class="example-spacer"></span>
+          <button mat-raised-button color="primary" (click)="closeCreateReclamos()">Volver</button>
+      </mat-card-header>
+      <mat-card-content >
+        <div class="form-div">
+        <form [formGroup]="myForm" (ngSubmit)="onSubmitReclamo($event)">
+          <p>
+            <mat-form-field appearance="fill">
+              <mat-label>Tipo de Solicitud</mat-label>
+              <select  id="tipo_solicitud" formControlName="tipo_solicitud" matNativeControl required>
+                <option value="2">Reclamo</option>
+              </select>
+            </mat-form-field>
+          </p>
+          <p>
+            <mat-form-field appearance="standard">
+              <mat-label>Descripcion:</mat-label>
+              <input id="text" formControlName="text" matInput placeholder="Placeholder">
+              <mat-error *ngIf="Text.invalid">{{getErrorText()}}</mat-error>
+            </mat-form-field>
+          </p>
+          <p>
+            <mat-form-field appearance="fill">
+              <mat-label>Fecha:</mat-label>
+              <input  matInput disabled>{{ date }} 
+            </mat-form-field>
+          </p>
+          <p>
+            <mat-form-field appearance="fill">
+              <mat-label>Ticket ID:</mat-label>
+              <input  matInput disabled> {{Asunto.ticket}} 
+            </mat-form-field>
+          </p>
+          <p>
+            <mat-form-field appearance="fill">
+              <mat-label>No_Radicado_Asocc:</mat-label>
+              <input  matInput disabled> {{ noRadicadoassoc }} 
+            </mat-form-field>
+          </p>
+          <button mat-raised-button color="primary" class="btn-block">Enviar</button>
+        </form>
+        </div>
+      </mat-card-content>
+  </mat-card>
+</div>
+
+<div *ngIf= "!asuntDef && !resultCom && !createAsu" >
     <mat-card>
         <mat-card-header>
             <button  mat-button style="font-size: 15px;">Asuntos Abiertos:</button>
             <span class="example-spacer"></span>
-            <button mat-raised-button color="primary" (click)="cancelSol()">Crear Asunto</button>
+            <button mat-raised-button color="primary" (click)="initData()">Recargar</button>
+            <button mat-raised-button color="primary" (click)="createAsunto()">Crear Asunto</button>
         </mat-card-header>
         <mat-card-content >
                 <mat-selection-list #shoes [multiple]="false">
+                  <mat-divider></mat-divider>
                     <mat-list-option *ngFor="let objetc of listAsuntos" (click)="selectAsunto(objetc)">
                         {{objetc.asunto}}
+                        <mat-divider></mat-divider>
                       </mat-list-option>
+                    
                 </mat-selection-list>
         </mat-card-content>
     </mat-card>
 </div>
+
+<div *ngIf= "createAsu">
+  <mat-card>
+    <mat-card-header>
+      
+    </mat-card-header>
+    <mat-card-content >
+      <div class="form-div">
+      <form [formGroup]="myFormAsu" (ngSubmit)="onSubmitAsun($event)">
+        <p>
+          <mat-form-field appearance="standard">
+            <mat-label>Asunto:</mat-label>
+            <input id="asunto" formControlName="asunto" matInput placeholder="Placeholder">
+            <mat-error *ngIf="asunto.invalid">{{getErrorAsunto()}}</mat-error>
+          </mat-form-field>
+        </p>
+        <button mat-raised-button color="primary" class="btn-block">Enviar</button>
+        <button mat-raised-button color="primary"  (click)="cancelAsun()">Volver</button>
+      </form>
+      </div>
+    </mat-card-content>
+  </mat-card>
+
+
+</div>
+
 
 <div *ngIf= "registrarSol && !resultCom"  class="form-div">
   <form [formGroup]="myForm" (ngSubmit)="onSubmit($event)">
@@ -166,8 +256,8 @@
           <input  matInput disabled> {{Asunto.ticket}} 
         </mat-form-field>
       </p>
-      <button mat-raised-button class="btn-block">Enviar</button>
-      <button mat-raised-button (click)="cancelSol()">Volver</button>
+      <button mat-raised-button color="primary" class="btn-block">Enviar</button>
+      <button mat-raised-button color="primary"  (click)="cancelSol()">Volver</button>
     </form>
       
 </div>
