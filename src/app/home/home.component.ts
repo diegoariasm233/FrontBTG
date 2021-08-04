@@ -11,7 +11,7 @@ import { FormGroup, FormBuilder, Validators } from '@angular/forms';
 })
 export class HomeComponent implements OnInit {
 
-  displayedColumns: string[] = ['no_radicado', 'tipo_solicitud', 'date' , 'optionver', 'optionregistry'];
+  displayedColumns: string[] = ['no_radicado', 'tipo_solicitud','text', 'date' , 'optionver', 'optionregistry'];
   registrarSol: Boolean;
   asuntDef: Boolean;
   openRespAdmin: Boolean;
